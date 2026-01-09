@@ -1,0 +1,18 @@
+Recipe for compiling avl for Windows on linux system with MINGW installed.
+
+Create a working directory for MINGW program development, such as:
+  $HOME/mingw-dev
+
+cp *.sh to <path-to>/mingw-dev
+cp Makefile to <path-to>/mingw-dev
+
+cd <path-to>/mingw-dev
+mkdir winavl
+mv Makefile winavl
+mkdir lib include bin
+
+cd to <path-to>/mingw-dev/winavl
+
+Compile avl for Windows:
+  AVL_DIR=<path-to-avl-package-root> make
+
