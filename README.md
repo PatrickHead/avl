@@ -1,4 +1,4 @@
-@b avl - A Simple AVL binary tree library
+<b>avl</b> - A Simple AVL binary tree library
 
 A C language library to create and maintain AVL binary tree.
 
