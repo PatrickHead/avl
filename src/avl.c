@@ -241,7 +241,7 @@ exit:
 }
 
   /**
-   *  @fn void avl_set_new(avl *tree, avl_node *(*new_node)(void))
+   *  @fn void avl_set_new(avl *tree, avl_new_node new_node)
    *
    *  @brief sets function used by @p tree for created a new @a avl_node
    *
@@ -252,13 +252,13 @@ exit:
    *    Nothing.
    */
 
-void avl_set_new(avl *tree, avl_node *(*new_node)(void))
+void avl_set_new(avl *tree, avl_new_node new_node)
 {
   if (tree) tree->new_node = new_node;
 }
 
   /**
-   *  @fn void avl_set_dup(avl *tree, avl_node *(*dup_node)(avl_node *node))
+   *  @fn void avl_set_dup(avl *tree, avl_dup_node dup_node)
    *
    *  @brief sets function used by @p tree for duplicating an @a avl_node
    *
@@ -269,13 +269,13 @@ void avl_set_new(avl *tree, avl_node *(*new_node)(void))
    *    Nothing.
    */
 
-void avl_set_dup(avl *tree, avl_node *(*dup_node)(avl_node *node))
+void avl_set_dup(avl *tree, avl_dup_node dup_node)
 {
   if (tree) tree->dup_node = dup_node;
 }
 
   /**
-   *  @fn void avl_set_free(avl *tree, void (*free_node)(avl_node *node))
+   *  @fn void avl_set_free(avl *tree, avl_free_node free_node)
    *
    *  @brief sets function used by @p tree for freeing an @a avl_node
    *
@@ -286,13 +286,13 @@ void avl_set_dup(avl *tree, avl_node *(*dup_node)(avl_node *node))
    *    Nothing.
    */
 
-void avl_set_free(avl *tree, void (*free_node)(avl_node *node))
+void avl_set_free(avl *tree, avl_free_node free_node)
 {
   if (tree) tree->free_node = free_node;
 }
 
   /**
-   *  @fn void avl_set_cmp(avl *tree, int (*cmp_node)(avl_node *a, avl_node *b))
+   *  @fn void avl_set_cmp(avl *tree, avl_cmp_node cmp_node)
    *
    *  @brief sets function used by @p tree for comparing two @a avl_node
    *
@@ -303,7 +303,7 @@ void avl_set_free(avl *tree, void (*free_node)(avl_node *node))
    *    Nothing.
    */
 
-void avl_set_cmp(avl *tree, int (*cmp_node)(avl_node *a, avl_node *b))
+void avl_set_cmp(avl *tree, avl_cmp_node cmp_node)
 {
   if (tree) tree->cmp_node = cmp_node;
 }

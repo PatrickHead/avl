@@ -122,10 +122,10 @@ int avl_insert(avl *tree, avl_node *item);
 int avl_delete(avl *tree, avl_node *target);
 avl_node *avl_find(avl *tree, avl_node *target);
 void avl_walk(avl *tree, avl_order order, void (*action)(avl_node *n));
-void avl_set_new(avl *tree, avl_node *(*new_node)(void));
-void avl_set_dup(avl *tree, avl_node *(*dup_node)(avl_node *node));
-void avl_set_free(avl *tree, void (*free_node)(avl_node *node));
-void avl_set_cmp(avl *tree, int (*cmp_node)(avl_node *a, avl_node *b));
+void avl_set_new(avl *tree, avl_new_node new_node);
+void avl_set_dup(avl *tree, avl_dup_node dup_node);
+void avl_set_free(avl *tree, avl_free_node free_node);
+void avl_set_cmp(avl *tree, avl_cmp_node cmp_node);
 
   /*
    *  AVL NODE functions
