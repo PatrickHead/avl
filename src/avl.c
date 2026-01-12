@@ -39,22 +39,19 @@ static avl_node *_avl_find(avl_node *node,
 static void _avl_destroy(avl_node *root,
                          int (*compare)(avl_node *a, avl_node *b),
                          void (*free_node)(avl_node *n));
-static void _avl_walk(avl_node *root,
-                      avl_order order,
-                      void (*action)(avl_node *n));
+static void _avl_walk(avl_node *root, avl_order order, avl_action action);
 static int height(avl_node *n);
 static int max(int a, int b);
 static avl_node *avl_rotate_right(avl_node *y);
 static avl_node *avl_rotate_left(avl_node *x);
 static int avl_get_balance(avl_node *n);
 static avl_node *minimum_node(avl_node *n);
-static void pre_order(avl_node *root, void (*action)(avl_node *n));
-static void forward_order(avl_node *root, void (*action)(avl_node *n));
-static void reverse_order(avl_node *root, void (*action)(avl_node *n));
-static void post_order(avl_node *root, void (*action)(avl_node *n));
-static void tree_order(avl_node *root, void (*action)(avl_node *n));
-static void __tree_order(avl_node *root,
-                         void (*action)(avl_node *n), int height);
+static void pre_order(avl_node *root, avl_action action);
+static void forward_order(avl_node *root, avl_action action);
+static void reverse_order(avl_node *root, avl_action action);
+static void post_order(avl_node *root, avl_action action);
+static void tree_order(avl_node *root, avl_action action);
+static void __tree_order(avl_node *root, avl_action action, int height);
 static void dup_tree(avl *tree, avl_node **new_root, avl_node *old_root);
 
     /*
@@ -218,7 +215,7 @@ exit:
 }
 
   /**
-   *  @fn void avl_walk(avl *tree, avl_order order, void (*action)(avl_node *n))
+   *  @fn void avl_walk(avl *tree, avl_order order, avl_action action)
    *
    *  @brief walk an AVL tree in requested order calling @p action on each node
    *
@@ -230,7 +227,7 @@ exit:
    *    Nothing.
    */
 
-void avl_walk(avl *tree, avl_order order, void (*action)(avl_node *n))
+void avl_walk(avl *tree, avl_order order, avl_action action)
 {
   if (!tree || !action) goto exit;
 
@@ -703,9 +700,7 @@ static void _avl_destroy(avl_node *root,
 }
 
   /**
-   *  @fn void _avl_walk(avl_node *root,
-   *                     avl_order order,
-   *                     void (*action)(avl_node *n))
+   *  @fn void _avl_walk(avl_node *root, avl_order order, avl_action action)
    *
    *  @brief walk an AVL tree, in requested order
    *
@@ -717,9 +712,7 @@ static void _avl_destroy(avl_node *root,
    *    Nothing.
    */
 
-static void _avl_walk(avl_node *root,
-                      avl_order order,
-                      void (*action)(avl_node *n))
+static void _avl_walk(avl_node *root, avl_order order, avl_action action)
 {
   if (!root) return;
 
@@ -866,7 +859,7 @@ static avl_node *minimum_node(avl_node *n)
 }
 
   /**
-   *  @fn void pre_order(avl_node *root, void (*action)(avl_node *n))
+   *  @fn void pre_order(avl_node *root, avl_action action)
    *
    *  @brief Walk the sub-tree under @p n in pre-order: root-left-right
    *
@@ -877,7 +870,7 @@ static avl_node *minimum_node(avl_node *n)
    *  Nothing.
    */
 
-static void pre_order(avl_node *root, void (*action)(avl_node *n))
+static void pre_order(avl_node *root, avl_action action)
 {
   if (!root || !action) return;
 
@@ -887,7 +880,7 @@ static void pre_order(avl_node *root, void (*action)(avl_node *n))
 }
 
   /**
-   *  @fn void forward_order(avl_node *root, void (*action)(avl_node *n))
+   *  @fn void forward_order(avl_node *root, avl_action action)
    *
    *  @brief Walk the sub-tree under @p n in forward-order: left-root-right
    *
@@ -898,7 +891,7 @@ static void pre_order(avl_node *root, void (*action)(avl_node *n))
    *  Nothing.
    */
 
-static void forward_order(avl_node *root, void (*action)(avl_node *n))
+static void forward_order(avl_node *root, avl_action action)
 {
   if (!root || !action) return;
 
@@ -908,7 +901,7 @@ static void forward_order(avl_node *root, void (*action)(avl_node *n))
 }
 
   /**
-   *  @fn void reverse_order(avl_node *root, void (*action)(avl_node *n))
+   *  @fn void reverse_order(avl_node *root, avl_action action)
    *
    *  @brief Walk the sub-tree under @p n in reverse-order: right-root-left
    *
@@ -919,7 +912,7 @@ static void forward_order(avl_node *root, void (*action)(avl_node *n))
    *  Nothing.
    */
 
-static void reverse_order(avl_node *root, void (*action)(avl_node *n))
+static void reverse_order(avl_node *root, avl_action action)
 {
   if (!root || !action) return;
 
@@ -929,7 +922,7 @@ static void reverse_order(avl_node *root, void (*action)(avl_node *n))
 }
 
   /**
-   *  @fn void post_order(avl_node *root, void (*action)(avl_node *n))
+   *  @fn void post_order(avl_node *root, avl_action action)
    *
    *  @brief Walk the sub-tree under @p n in post-order: left-right-root
    *
@@ -940,7 +933,7 @@ static void reverse_order(avl_node *root, void (*action)(avl_node *n))
    *  Nothing.
    */
 
-static void post_order(avl_node *root, void (*action)(avl_node *n))
+static void post_order(avl_node *root, avl_action action)
 {
   if (!root || !action) return;
 
@@ -950,7 +943,7 @@ static void post_order(avl_node *root, void (*action)(avl_node *n))
 }
 
   /**
-   *  @fn void tree_order(avl_node *root, void (*action)(avl_node *n))
+   *  @fn void tree_order(avl_node *root, avl_action action)
    *
    *  @brief Walk the sub-tree under @p n in tree-order, AKA level-order:
    *    level1-level2-...-levelN
@@ -962,7 +955,7 @@ static void post_order(avl_node *root, void (*action)(avl_node *n))
    *  Nothing.
    */
 
-static void tree_order(avl_node *root, void (*action)(avl_node *n))
+static void tree_order(avl_node *root, avl_action action)
 {
   int max;
   int i;
@@ -976,9 +969,7 @@ static void tree_order(avl_node *root, void (*action)(avl_node *n))
 }
 
   /**
-   *  @fn void __tree_order(avl_node *root,
-   *                        void (*action)(avl_node *n),
-   *                        int height)
+   *  @fn void __tree_order(avl_node *root, avl_action action, int height)
    *
    *  @brief recursive helper function for tree_order()
    *
@@ -990,7 +981,7 @@ static void tree_order(avl_node *root, void (*action)(avl_node *n))
    *  Nothing.
    */
 
-static void __tree_order(avl_node *root, void (*action)(avl_node *n), int height)
+static void __tree_order(avl_node *root, avl_action action, int height)
 {
   if (!root || !action) return;
 

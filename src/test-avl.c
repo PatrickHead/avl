@@ -49,23 +49,23 @@ int main()
   avl_insert(tree, avl_node_new(tree, (void *)32));
 
   printf("Preorder traversal of the constructed AVL tree is\n"); 
-  avl_walk(tree, avl_pre_order, action); 
+  avl_walk(tree, avl_pre_order, (avl_action)action); 
   printf("\n");
 
   printf("Forward order traversal of the constructed AVL tree is\n");
-  avl_walk(tree, avl_forward_order, action); 
+  avl_walk(tree, avl_forward_order, (avl_action)action); 
   printf("\n");
 
   printf("Reverse order traversal of the constructed AVL tree is\n");
-  avl_walk(tree, avl_reverse_order, action); 
+  avl_walk(tree, avl_reverse_order, (avl_action)action); 
   printf("\n");
 
   printf("Postorder traversal of the constructed AVL tree is\n");
-  avl_walk(tree, avl_post_order, action); 
+  avl_walk(tree, avl_post_order, (avl_action)action); 
   printf("\n");
 
   printf("Tree order traversal of the constructed AVL tree is\n");
-  avl_walk(tree, avl_tree_order, action);
+  avl_walk(tree, avl_tree_order, (avl_action)action);
   printf("\n");
 
   temp = avl_node_new(tree, (void *)16);
@@ -77,7 +77,7 @@ int main()
   printf("avl_delete() returned %d\n", rv);
 
   printf("Forward traversal after delete(16) is\n");
-  avl_walk(tree, avl_forward_order, action); 
+  avl_walk(tree, avl_forward_order, (avl_action)action); 
   printf("\n");
 
   node = avl_find(tree, temp);
@@ -93,7 +93,7 @@ int main()
   printf("avl_delete() returned %d\n", rv);
 
   printf("Forward traversal after delete(25) is\n");
-  avl_walk(tree, avl_forward_order, action); 
+  avl_walk(tree, avl_forward_order, (avl_action)action); 
   printf("\n");
 
   node = avl_find(tree, temp);
@@ -109,7 +109,7 @@ int main()
   printf("avl_delete() returned %d\n", rv);
 
   printf("Forward traversal after delete(40) is\n");
-  avl_walk(tree, avl_forward_order, action); 
+  avl_walk(tree, avl_forward_order, (avl_action)action); 
   printf("\n");
 
   node = avl_find(tree, temp);
@@ -117,7 +117,7 @@ int main()
   else printf("40 not found\n");
 
   printf("Tree order traversal after deletions is\n");
-  avl_walk(tree, avl_tree_order, action);
+  avl_walk(tree, avl_tree_order, (avl_action)action);
   printf("\n");
 
   avl_free(tree);

@@ -90,6 +90,13 @@ typedef void (*avl_free_node)(avl_node *node);
 typedef int (*avl_cmp_node)(avl_node *a, avl_node *b);
 
   /**
+   *  @typedef int (*avl_action)(avl_node *n)
+   *  @brief   creates a type for function prototype used by @a avl_walk
+   */
+
+typedef int (*avl_action)(avl_node *n);
+
+  /**
    *  @typedef struct avl avl
    *  @brief   creates a type for @a avl struct
    */
@@ -121,7 +128,7 @@ void avl_free(avl *tree);
 int avl_insert(avl *tree, avl_node *item);
 int avl_delete(avl *tree, avl_node *target);
 avl_node *avl_find(avl *tree, avl_node *target);
-void avl_walk(avl *tree, avl_order order, void (*action)(avl_node *n));
+void avl_walk(avl *tree, avl_order order, avl_action action);
 void avl_set_new(avl *tree, avl_new_node new_node);
 void avl_set_dup(avl *tree, avl_dup_node dup_node);
 void avl_set_free(avl *tree, avl_free_node free_node);
