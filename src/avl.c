@@ -31,14 +31,16 @@ static avl_node *_avl_insert(avl_node *node,
                              int (*compare)(avl_node *a, avl_node *b));
 static avl_node *_avl_delete(avl_node *root,
                              avl_node *target,
-                             int (*compare)(avl_node *a, avl_node *b),
-                             void (*free_node)(avl_node *n));
+                             avl_cmp_node compare,
+                             avl_free_node free_node,
+                             avl_copy_node_data copy_node_data);
 static avl_node *_avl_find(avl_node *node,
                            avl_node *target,
                            int (*compare)(avl_node *a, avl_node *b));
 static void _avl_destroy(avl_node *root,
-                         int (*compare)(avl_node *a, avl_node *b),
-                         void (*free_node)(avl_node *n));
+                         avl_cmp_node compare,
+                         avl_free_node free_node,
+                         avl_copy_node_data copy_data);
 static void _avl_walk(avl_node *root, avl_order order, avl_action action);
 static int height(avl_node *n);
 static int max(int a, int b);
@@ -127,7 +129,10 @@ void avl_free(avl *tree)
 {
   if (!tree) return;
 
-  if (tree->root) _avl_destroy(tree->root, tree->cmp_node, tree->free_node);
+  if (tree->root) _avl_destroy(tree->root,
+                               tree->cmp_node,
+                               tree->free_node,
+                               tree->copy_node_data);
   free(tree);
 }
 
@@ -148,6 +153,7 @@ int avl_insert(avl *tree, avl_node *item)
   avl_node *new_root;
 
   if (!tree || !item) goto exit;
+  if (!tree->cmp_node) goto exit;
 
   new_root = _avl_insert(tree->root, item, tree->cmp_node);
   if (new_root)
@@ -155,6 +161,7 @@ int avl_insert(avl *tree, avl_node *item)
     tree->root = new_root;
     tree->height = height(tree->root);
     rv = 0;
+    ++tree->n_nodes;
   }
 
 exit:
@@ -179,12 +186,17 @@ int avl_delete(avl *tree, avl_node *target)
 
   if (!tree || !target) goto exit;
 
-  new_root = _avl_delete(tree->root, target, tree->cmp_node, tree->free_node);
+  new_root = _avl_delete(tree->root,
+                         target,
+                         tree->cmp_node,
+                         tree->free_node,
+                         tree->copy_node_data);
   if (new_root)
   {
     tree->root = new_root;
     tree->height = height(tree->root);
     rv = 0;
+    --tree->n_nodes;
   }
 
 exit:
@@ -303,6 +315,23 @@ void avl_set_free(avl *tree, avl_free_node free_node)
 void avl_set_cmp(avl *tree, avl_cmp_node cmp_node)
 {
   if (tree) tree->cmp_node = cmp_node;
+}
+
+  /**
+   *  @fn void avl_set_cmp(avl *tree, avl_cmp_node cmp_node)
+   *
+   *  @brief sets function used by @p tree for comparing two @a avl_node
+   *
+   *  @param tree - pointer to @a avl struct
+   *  @param cmp_node - function that compares two @a avl_node for this tree
+   *
+   *  @par Returns
+   *    Nothing.
+   */
+
+void avl_set_copy_data(avl *tree, avl_copy_node_data copy_node_data)
+{
+  if (tree) tree->copy_node_data = copy_node_data;
 }
 
       /*
@@ -455,38 +484,47 @@ static avl_node *_avl_insert(avl_node *node,
      * If this node becomes unbalanced, then there are 4 cases
      */
 
-      /*
-       * Left Left Case
-       */
-
-  if ((balance > 1) && (compare(item, node->left) < 0))
-    return avl_rotate_right(node);
-
-      /*
-       * Right Right Case
-       */
-
-  if ((balance < -1) && (compare(item, node->right) > 0))
-    return avl_rotate_left(node);
-
-      /*
-       * Left Right Case
-       */
-
-  if ((balance > 1) && (compare(item, node->left) > 0))
+  if (balance > 1)
   {
-    node->left = avl_rotate_left(node->left);
-    return avl_rotate_right(node);
+    pos = compare(item, node->left);
+
+        /*
+         * Left Left Case
+         */
+
+    if (pos < 0) return avl_rotate_right(node);
+
+        /*
+         * Left Right Case
+         */
+
+    if (pos > 0)
+    {
+      node->left = avl_rotate_left(node->left);
+      return avl_rotate_right(node);
+    }
   }
 
-      /*
-       * Right Left Case
-       */
-
-  if ((balance < -1) && (compare(item, node->right) < 0))
+  if (balance < -1)
   {
-    node->right = avl_rotate_right(node->right);
-    return avl_rotate_left(node);
+    pos = compare(item, node->right);
+
+        /*
+         * Right Right Case
+         */
+
+    if (pos > 0) return avl_rotate_left(node);
+
+
+        /*
+         * Right Left Case
+         */
+
+    if (pos < 0)
+    {
+      node->right = avl_rotate_right(node->right);
+      return avl_rotate_left(node);
+    }
   }
 
     /*
@@ -499,8 +537,9 @@ static avl_node *_avl_insert(avl_node *node,
   /**
    *  @fn avl_node *_avl_delete(avl_node *root,
    *                            avl_node *target,
-   *                            int (*compare)(avl_node *a, avl_node *b),
-   *                            void (*free_node)(avl_node *n))
+   *                            avl_cmp_node compare,
+   *                            avl_free_node free_node,
+   *                            avl_copy_node_data copy_data)
    *
    *  @brief deletes a node with given key given root to delete from
    *
@@ -508,18 +547,19 @@ static avl_node *_avl_insert(avl_node *node,
    *  @param target - pointer to @a avl_node containing target key to delete
    *  @param compare - comparison function used to determine order of two nodes
    *  @param free_node - function used to free memory allocated to deleted node
+   *  @param copy_node_data - function used to copy data contents of node
    *
    *  @return pointer to new root of subtree
    */
 
 static avl_node *_avl_delete(avl_node *root,
                              avl_node *target,
-                             int (*compare)(avl_node *a, avl_node *b),
-                             void (*free_node)(avl_node *n))
+                             avl_cmp_node compare,
+                             avl_free_node free_node,
+                             avl_copy_node_data copy_data)
 {
   int pos = 0;
-  void *root_val;
-  avl_node *child, temp;
+  avl_node *child, *temp;
 
     /*
      * Standard BST delete
@@ -530,31 +570,37 @@ static avl_node *_avl_delete(avl_node *root,
   pos = compare(target, root);
 
   if (pos < 0)
-    root->left = _avl_delete(root->left, target, compare, free_node);
+    root->left = _avl_delete(root->left,
+                             target,
+                             compare,
+                             free_node,
+                             copy_data);
   else if(pos > 0)
-    root->right = _avl_delete(root->right, target, compare, free_node);
+    root->right = _avl_delete(root->right,
+                              target,
+                              compare,
+                              free_node,
+                              copy_data);
   else
   {
       /*
        * node with zero or one child
        */
 
-    if((root->left == NULL) || (root->right == NULL))
+    if(!root->left || !root->right)
     {
       child = root->left ? root->left : root->right;
       if (child)
       {
-        temp = *root;
-        *root = *child;
-        *child = temp;
+        if (free_node) free_node(root);
+        else free(root);
+        return child;
       }
-      if (!child)
+      else
       {
         child = root;
         root = NULL;
       }
-      if (free_node) free_node(child);
-      else free(child);
     }
 
       /*
@@ -567,21 +613,23 @@ static avl_node *_avl_delete(avl_node *root,
          * get the inorder successor (smallest in the right subtree)
          */
 
-      avl_node* temp = minimum_node(root->right);
+      temp = minimum_node(root->right);
 
         /*
          * copy the inorder successor's data to this node
          */
 
-      root_val = root->value;
-      root->value = temp->value;
-      temp->value = root_val;
+      copy_data(root, temp);
 
         /*
          * delete the inorder successor
          */
 
-      root->right = _avl_delete(root->right, temp, compare, free_node);
+      root->right = _avl_delete(root->right,
+                                temp,
+                                compare,
+                                free_node,
+                                copy_data);
     }
   }
 
@@ -677,26 +725,29 @@ static avl_node *_avl_find(avl_node *root,
 
   /**
    *  @fn void _avl_destroy(avl_node *root,
-   *                        int (*compare)(avl_node *a, avl_node *b),
-   *                        void (*free_node)(avl_node *n))
+   *                        avl_cmp_node compare,
+   *                        avl_free_node free_node,
+   *                        avl_copy_node_data copy_data)
    *
    *  @brief destroy an entire AVL tree
    *
    *  @param root - pointer to @a avl_node that is root of tree
    *  @param compare - comparison function used to determine order of two nodes
    *  @param free_node - function used to free memory allocated to deleted node
+   *  @param copy_data - function used to copy node data
    *
    *  @par Returns
    *    Nothing.
    */
 
 static void _avl_destroy(avl_node *root,
-                         int (*compare)(avl_node *a, avl_node *b),
-                         void (*free_node)(avl_node *n))
+                         avl_cmp_node compare,
+                         avl_free_node free_node,
+                         avl_copy_node_data copy_data)
 {
   if (!root) return;
 
-  while (root) root = _avl_delete(root, root, compare, free_node);
+  while (root) root = _avl_delete(root, root, compare, free_node, copy_data);
 }
 
   /**
@@ -781,8 +832,8 @@ static avl_node *avl_rotate_right(avl_node *y)
   y->left = T2;
 
     // Update heights
-  y->height = max(height(y->left), height(y->right))+1;
-  x->height = max(height(x->left), height(x->right))+1;
+  y->height = max(height(y->left), height(y->right)) + 1;
+  x->height = max(height(x->left), height(x->right)) + 1;
 
     // Return new root
   return x;
@@ -808,8 +859,8 @@ static avl_node *avl_rotate_left(avl_node *x)
   x->right = T2;
 
     // Update heights
-  x->height = max(height(x->left), height(x->right))+1;
-  y->height = max(height(y->left), height(y->right))+1;
+  x->height = max(height(x->left), height(x->right)) + 1;
+  y->height = max(height(y->left), height(y->right)) + 1;
 
     // Return new root
   return y;
@@ -895,9 +946,9 @@ static void forward_order(avl_node *root, avl_action action)
 {
   if (!root || !action) return;
 
-  if (root->left) forward_order(root->left, action);
+  forward_order(root->left, action);
   action(root);
-  if (root->right) forward_order(root->right, action);
+  forward_order(root->right, action);
 }
 
   /**
@@ -985,7 +1036,6 @@ static void __tree_order(avl_node *root, avl_action action, int height)
 {
   if (!root || !action) return;
 
-  
   if (root->height == height) action(root);
 
   __tree_order(root->left, action, height);
@@ -1006,12 +1056,15 @@ static avl_node *_avl_node_new(void *value)
 {
   avl_node *n = NULL;
 
-  if ((n = (avl_node *)malloc(sizeof(avl_node))))
-    memset(n, 0, sizeof(avl_node));
+  n = malloc(sizeof(avl_node));
+  if (!n) goto exit;
+
+  memset(n, 0, sizeof(avl_node));
 
   n->value = value;
   n->height = 1;
 
+exit:
   return n;
 }
 

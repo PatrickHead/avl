@@ -90,6 +90,14 @@ typedef void (*avl_free_node)(avl_node *node);
 typedef int (*avl_cmp_node)(avl_node *a, avl_node *b);
 
   /**
+   *  @typedef void *(*avl_copy_node_data)(avl_node *dst, avl_node *src);
+   *  @brief   creates a type for function prototype to copy data contents of
+   *           @ avl_node
+   */
+
+typedef void (*avl_copy_node_data)(avl_node *dst, avl_node *src);
+
+  /**
    *  @typedef int (*avl_action)(avl_node *n)
    *  @brief   creates a type for function prototype used by @a avl_walk
    */
@@ -116,6 +124,8 @@ struct avl
   avl_dup_node dup_node;    /**<  user supplied function to duplicate an @a avl_node         */
   avl_free_node free_node;  /**<  user supplied function to free an a @a avl_node            */
   avl_cmp_node cmp_node;    /**<  user supplied function to compare two @a avl_node structs  */
+  avl_copy_node_data copy_node_data;    /**<  user supplied function to copy data contents of node  */
+  int n_nodes;              /**<  current number of nodes in tree                            */
 };
 
   /*
@@ -133,6 +143,7 @@ void avl_set_new(avl *tree, avl_new_node new_node);
 void avl_set_dup(avl *tree, avl_dup_node dup_node);
 void avl_set_free(avl *tree, avl_free_node free_node);
 void avl_set_cmp(avl *tree, avl_cmp_node cmp_node);
+void avl_set_copy_data(avl *tree, avl_copy_node_data copy_node_data);
 
   /*
    *  AVL NODE functions
