@@ -102,7 +102,7 @@ typedef void (*avl_copy_node_data)(avl_node *dst, avl_node *src);
    *  @brief   creates a type for function prototype used by @a avl_walk
    */
 
-typedef int (*avl_action)(avl_node *n);
+typedef void (*avl_action)(avl_node *n);
 
   /**
    *  @typedef struct avl avl
