@@ -34,6 +34,6 @@ install: avl.lib
 	@cp ../include/avl.h $(WINPKGINCLDIR)
 
 uninstall:
-	@rm $(WINPKGLIBDIR)/avl.lib
-	@cp $(WINPKGINCLDIR) ../include/avl.h
+	@rm -f $(WINPKGLIBDIR)/avl.lib
+	@rm -f $(WINPKGINCLDIR)/avl.h
 
