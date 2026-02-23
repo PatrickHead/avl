@@ -7,6 +7,8 @@ WINPKGLIBDIR = $(WINPKGSDIR)/lib
 
 CC = x86_64-w64-mingw32-gcc
 COPTS = -O3 -g0 -Wall -I $(INCLDIR) -I $(WINPKGINCLDIR) -L . -L $(WINPKGLIBDIR)
+AR = x86_64-w64-mingw32-ar
+RANLIB = x86_64-w64-mingw32-ranlib
 
 all: avl.lib test-avl.exe
 
@@ -20,11 +22,11 @@ test-avl.obj: $(SRCDIR)/test-avl.c $(INCLDIR)/avl.h
 	$(CC) $(COPTS) -o test-avl.obj -c $(SRCDIR)/test-avl.c
 
 libavl.a: avl.obj
-	ar rcs libavl.a avl.obj
+	$(AR) rcs libavl.a avl.obj
 
 avl.lib: libavl.a
 	@cp libavl.a avl.lib
-	ranlib avl.lib
+	$(RANLIB) avl.lib
 
 clean:
 	@rm -f *.a *.obj *.lib *.exe
