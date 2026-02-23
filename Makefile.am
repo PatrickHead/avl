@@ -51,6 +51,9 @@ uninstall-hook:
 	@rm -rf $(prefix)/share/doc/avl
 	@rm -rf $(prefix)/share/pkgconfig/avl.pc
 
+clean-local:
+	@(cd windows; make clean)
+
 code-stats:
 	@echo -n " total lines of source code: "; wc -l src/*.[ch] include/*.[ch] | tail -1 | sed -e 's/ total//' -e 's/^  *//'
 	@echo -n "actual lines of source code: "; (gcc -fpreprocessed -dD -E src/*.[ch] include/*.[ch] | sed -e '/^$$/d' -e '/^# [0-9]/d' | wc -l)
